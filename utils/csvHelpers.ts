@@ -1,4 +1,4 @@
-import { DailyLog } from '../types';
+import { DailyLog, UserProfile, Gender } from '../types';
 
 const HEADERS = [
   'Date',
@@ -13,7 +13,9 @@ const HEADERS = [
   'CaloriesBurned'
 ];
 
-export const generateCSV = (logs: DailyLog[]): string => {
+export const generateCSV = (logs: DailyLog[], profile: UserProfile): string => {
+  // Add metadata row at the top
+  const metadataRow = `METADATA,${profile.height},${profile.age},${profile.gender}`;
   const headerRow = HEADERS.join(',');
   const rows = logs.map(log => {
     return [
@@ -29,15 +31,40 @@ export const generateCSV = (logs: DailyLog[]): string => {
       log.caloriesBurned
     ].join(',');
   });
-  return [headerRow, ...rows].join('\n');
+  return [metadataRow, headerRow, ...rows].join('\n');
 };
 
-export const parseCSV = (csvContent: string): DailyLog[] => {
-  const lines = csvContent.trim().split('\n');
-  if (lines.length < 2) return [];
+export const parseCSV = (csvContent: string): { logs: DailyLog[], profile?: UserProfile } => {
+  const lines = csvContent.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+  if (lines.length === 0) return { logs: [] };
 
-  // Skip header
-  const dataLines = lines.slice(1);
+  let profile: UserProfile | undefined;
+  let logStartIndex = 0;
+
+  // Check for Metadata
+  // Format: METADATA,Height,Age,Gender
+  if (lines[0].startsWith('METADATA')) {
+    const parts = lines[0].split(',').map(p => p.trim());
+    if (parts.length >= 4) {
+      const h = parseFloat(parts[1]);
+      const a = parseFloat(parts[2]);
+      const g = parts[3] as Gender;
+      
+      if (!isNaN(h) && !isNaN(a) && (g === Gender.Male || g === Gender.Female)) {
+        profile = { height: h, age: a, gender: g };
+      }
+    }
+    logStartIndex = 1;
+  }
+
+  // Ensure we have enough lines for headers + data
+  if (lines.length <= logStartIndex) {
+    // If only metadata exists, return it with empty logs
+    return { logs: [], profile };
+  }
+
+  // Skip header row
+  const dataLines = lines.slice(logStartIndex + 1);
   const logs: DailyLog[] = [];
 
   for (const line of dataLines) {
@@ -45,7 +72,6 @@ export const parseCSV = (csvContent: string): DailyLog[] => {
     if (cols.length < 9) continue; // Basic validation
 
     // Mapping based on HEADERS index
-    // 0:Date, 1:Weight, 2:BMI, 3:Neck, 4:Waist, 5:Hip, 6:BodyFat, 7:CalIn, 8:Steps, 9:CalOut
     const log: DailyLog = {
       date: cols[0],
       weight: parseFloat(cols[1]) || 0,
@@ -62,11 +88,14 @@ export const parseCSV = (csvContent: string): DailyLog[] => {
   }
 
   // Sort by date ascending
-  return logs.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  return { 
+    logs: logs.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()),
+    profile
+  };
 };
 
-export const downloadDatabaseFile = (logs: DailyLog[]) => {
-  const csv = generateCSV(logs);
+export const downloadDatabaseFile = (logs: DailyLog[], profile: UserProfile) => {
+  const csv = generateCSV(logs, profile);
   const blob = new Blob([csv], { type: 'text/plain' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');

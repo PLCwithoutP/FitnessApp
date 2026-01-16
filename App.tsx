@@ -62,10 +62,16 @@ const App: React.FC = () => {
       const content = e.target?.result as string;
       if (content) {
         try {
-          const parsedLogs = parseCSV(content);
+          const { logs: parsedLogs, profile: parsedProfile } = parseCSV(content);
           setLogs(parsedLogs);
-          alert(`Successfully imported ${parsedLogs.length} entries.`);
+          if (parsedProfile) {
+            setUserProfile(parsedProfile);
+            alert(`Successfully imported ${parsedLogs.length} entries and updated user profile.`);
+          } else {
+            alert(`Successfully imported ${parsedLogs.length} entries. No profile data found in file.`);
+          }
         } catch (error) {
+          console.error(error);
           alert('Failed to parse file. Please ensure it is a valid CSV/DAT file.');
         }
       }
@@ -74,7 +80,7 @@ const App: React.FC = () => {
   };
 
   const handleExport = () => {
-    downloadDatabaseFile(logs);
+    downloadDatabaseFile(logs, userProfile);
   };
 
   const NavButton = ({ targetView, icon: Icon, label }: { targetView: View; icon: any; label: string }) => (
