@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { DailyLog, UserProfile, Gender } from '../types';
-import { calculateBMI, calculateBodyFat } from '../utils/calculations';
+import { calculateBMI, calculateBodyFat, calculateBMR } from '../utils/calculations';
 
 interface EntryFormProps {
   userProfile: UserProfile;
@@ -20,7 +20,7 @@ export const EntryForm: React.FC<EntryFormProps> = ({ userProfile, onSave, exist
     caloriesBurned: 0
   });
 
-  const [previews, setPreviews] = useState({ bmi: 0, bodyFat: 0 });
+  const [previews, setPreviews] = useState({ bmi: 0, bodyFat: 0, bmr: 0 });
 
   useEffect(() => {
     if (existingLog) {
@@ -37,8 +37,9 @@ export const EntryForm: React.FC<EntryFormProps> = ({ userProfile, onSave, exist
 
     const bmi = calculateBMI(w, userProfile.height);
     const bf = calculateBodyFat(userProfile.gender, wa, n, userProfile.height, h);
+    const bmr = calculateBMR(w, userProfile.height, userProfile.age, userProfile.gender);
 
-    setPreviews({ bmi, bodyFat: bf });
+    setPreviews({ bmi, bodyFat: bf, bmr });
   }, [formData, userProfile]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -111,7 +112,7 @@ export const EntryForm: React.FC<EntryFormProps> = ({ userProfile, onSave, exist
             )}
           </div>
           
-          <div className="mt-4 grid grid-cols-2 gap-4">
+          <div className="mt-4 grid grid-cols-3 gap-4">
             <div className="bg-white p-3 rounded border border-slate-200 text-center">
               <span className="block text-xs text-slate-500">Calculated BMI</span>
               <span className="block text-lg font-bold text-teal-600">{previews.bmi}</span>
@@ -119,6 +120,10 @@ export const EntryForm: React.FC<EntryFormProps> = ({ userProfile, onSave, exist
             <div className="bg-white p-3 rounded border border-slate-200 text-center">
               <span className="block text-xs text-slate-500">Est. Body Fat %</span>
               <span className="block text-lg font-bold text-teal-600">{previews.bodyFat}%</span>
+            </div>
+            <div className="bg-white p-3 rounded border border-slate-200 text-center">
+              <span className="block text-xs text-slate-500">Est. BMR (kcal)</span>
+              <span className="block text-lg font-bold text-teal-600">{previews.bmr}</span>
             </div>
           </div>
         </div>
@@ -136,8 +141,8 @@ export const EntryForm: React.FC<EntryFormProps> = ({ userProfile, onSave, exist
               <input type="number" name="steps" value={formData.steps || ''} onChange={handleChange} className="w-full rounded-md border-slate-200 p-2" placeholder="0" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Calories Burned</label>
-              <input type="number" name="caloriesBurned" value={formData.caloriesBurned || ''} onChange={handleChange} className="w-full rounded-md border-slate-200 p-2" placeholder="0" />
+              <label className="block text-sm font-medium text-slate-700 mb-1">Active Calories Burned</label>
+              <input type="number" name="caloriesBurned" value={formData.caloriesBurned || ''} onChange={handleChange} className="w-full rounded-md border-slate-200 p-2" placeholder="e.g. Exercise" />
             </div>
           </div>
         </div>

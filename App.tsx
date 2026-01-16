@@ -142,7 +142,7 @@ const App: React.FC = () => {
         </header>
 
         <div className="p-6 md:p-8 max-w-7xl mx-auto">
-          {view === View.Dashboard && <Dashboard logs={logs} />}
+          {view === View.Dashboard && <Dashboard logs={logs} userProfile={userProfile} />}
           
           {view === View.Entry && (
             <EntryForm 

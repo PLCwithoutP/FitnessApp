@@ -7,6 +7,23 @@ export const calculateBMI = (weightKg: number, heightCm: number): number => {
   return parseFloat(bmi.toFixed(2));
 };
 
+export const calculateBMR = (
+  weightKg: number,
+  heightCm: number,
+  age: number,
+  gender: Gender
+): number => {
+  if (weightKg <= 0 || heightCm <= 0 || age <= 0) return 0;
+  
+  // Mifflin-St Jeor Equation
+  // P = 10m + 6.25h - 5a + s
+  // s is +5 for males, -161 for females
+  const s = gender === Gender.Male ? 5 : -161;
+  const bmr = (10 * weightKg) + (6.25 * heightCm) - (5 * age) + s;
+  
+  return Math.round(bmr);
+};
+
 export const calculateBodyFat = (
   gender: Gender,
   waistCm: number,

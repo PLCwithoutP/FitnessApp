@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import { DailyLog } from '../types';
+import { DailyLog, UserProfile } from '../types';
+import { calculateBMR } from '../utils/calculations';
 import {
   LineChart,
   Line,
@@ -13,6 +14,7 @@ import {
 
 interface DashboardProps {
   logs: DailyLog[];
+  userProfile: UserProfile;
 }
 
 const ChartCard: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
@@ -40,11 +42,20 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-export const Dashboard: React.FC<DashboardProps> = ({ logs }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ logs, userProfile }) => {
   const chartData = useMemo(() => {
     // Sort logs by date just in case
-    return [...logs].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  }, [logs]);
+    return [...logs]
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+      .map(log => {
+        const bmr = calculateBMR(log.weight, userProfile.height, userProfile.age, userProfile.gender);
+        return {
+          ...log,
+          bmr,
+          totalBurned: bmr + log.caloriesBurned
+        };
+      });
+  }, [logs, userProfile]);
 
   if (logs.length === 0) {
     return (
@@ -111,7 +122,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ logs }) => {
             <Tooltip content={<CustomTooltip />} />
             <Legend />
             <Line yAxisId="left" type="monotone" dataKey="caloriesIn" name="Cal In" stroke="#f97316" strokeWidth={2} dot={false} />
-            <Line yAxisId="left" type="monotone" dataKey="caloriesBurned" name="Cal Out" stroke="#ef4444" strokeWidth={2} dot={false} />
+            <Line yAxisId="left" type="monotone" dataKey="caloriesBurned" name="Active Burned" stroke="#fbbf24" strokeWidth={2} dot={false} strokeDasharray="5 5" />
+            <Line yAxisId="left" type="monotone" dataKey="totalBurned" name="Total Burned" stroke="#ef4444" strokeWidth={2} dot={false} />
             <Line yAxisId="right" type="monotone" dataKey="steps" name="Steps" stroke="#14b8a6" strokeWidth={2} dot={false} />
           </LineChart>
         </ResponsiveContainer>
