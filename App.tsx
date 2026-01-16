@@ -21,14 +21,19 @@ const App: React.FC = () => {
 
   // Initialization: Load from localStorage if available
   useEffect(() => {
-    const savedProfile = localStorage.getItem('vitalTrack_profile');
-    const savedLogs = localStorage.getItem('vitalTrack_logs');
+    try {
+      const savedProfile = localStorage.getItem('vitalTrack_profile');
+      const savedLogs = localStorage.getItem('vitalTrack_logs');
 
-    if (savedProfile) {
-      setUserProfile(JSON.parse(savedProfile));
-    }
-    if (savedLogs) {
-      setLogs(JSON.parse(savedLogs));
+      if (savedProfile) {
+        setUserProfile(JSON.parse(savedProfile));
+      }
+      if (savedLogs) {
+        setLogs(JSON.parse(savedLogs));
+      }
+    } catch (error) {
+      console.error("Failed to load data from local storage:", error);
+      // Fallback to defaults if parsing fails
     }
   }, []);
 
