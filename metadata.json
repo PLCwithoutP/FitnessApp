@@ -1,0 +1,5 @@
+{
+  "name": "VitalTrack",
+  "description": "A comprehensive health tracking application for monitoring weight, BMI, body metrics, and daily activity. Features U.S. Navy method body fat calculation, data visualization, and CSV database import/export.",
+  "requestFramePermissions": []
+}
